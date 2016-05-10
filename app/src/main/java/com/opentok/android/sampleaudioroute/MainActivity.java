@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import com.opentok.android.AudioDeviceManager;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -47,16 +48,15 @@ public class MainActivity extends Activity implements
     private Boolean wasPreviewing = false;
     private Boolean doReconnect = false;
 
-    int previousConnectionType = Integer.MAX_VALUE;
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(LOGTAG, "ONCREATE");
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        DefaultAudioDevice audioDevice = new DefaultAudioDevice(this);
+        AudioDeviceManager.setAudioDevice(audioDevice);
 
         mPublisherViewContainer = (LinearLayout) findViewById(R.id.publisherview);
         mSubscriberViewContainer = (LinearLayout) findViewById(R.id.subscriberview);
