@@ -1,6 +1,7 @@
 package com.opentok.android.sampleaudioroute;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 import com.opentok.android.AudioDeviceManager;
+import com.opentok.android.BaseAudioDevice;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -20,7 +22,11 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MainActivity extends Activity implements
         Session.SessionListener, Publisher.PublisherListener,
@@ -48,15 +54,32 @@ public class MainActivity extends Activity implements
     private Boolean wasPreviewing = false;
     private Boolean doReconnect = false;
 
+    private void setDefaultAudioDevice() {
+        try {
+            Class<?> clss = Class.forName("com.opentok.android.DefaultAudioDevice");
+            Constructor<?> cons = clss.getConstructor(Context.class);
+            cons.setAccessible(true);
+            BaseAudioDevice audioDevice = (BaseAudioDevice)cons.newInstance(this);
+            AudioDeviceManager.setAudioDevice(audioDevice);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(LOGTAG, "ONCREATE");
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        DefaultAudioDevice audioDevice = new DefaultAudioDevice(this);
-        AudioDeviceManager.setAudioDevice(audioDevice);
+        setDefaultAudioDevice();
 
         mPublisherViewContainer = (LinearLayout) findViewById(R.id.publisherview);
         mSubscriberViewContainer = (LinearLayout) findViewById(R.id.subscriberview);
