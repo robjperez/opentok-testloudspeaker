@@ -2,6 +2,7 @@ package com.opentok.android.sampleaudioroute;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.widget.LinearLayout;
 
 import com.opentok.android.AudioDeviceManager;
 import com.opentok.android.BaseAudioDevice;
+import com.opentok.android.BaseVideoCapturer;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -23,6 +25,7 @@ import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -193,10 +196,31 @@ public class MainActivity extends Activity implements
         mSession.disconnect();
     }
 
+    private void setExposureCompensation() {
+        try {
+            BaseVideoCapturer capturer = mPublisher.getCapturer();
+            Field cameraField = capturer.getClass().getDeclaredField("mCamera");
+            cameraField.setAccessible(true);
+            Camera camera = (Camera)cameraField.get(capturer);
+            Camera.Parameters params = camera.getParameters();
+            params.setExposureCompensation(params.getMaxExposureCompensation());
+
+            if(params.isAutoExposureLockSupported()) {
+                params.setAutoExposureLock(false);
+            }
+            camera.setParameters(params);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void onClickPreview(View v) {
         if (mPublisher == null && !wasPreviewing) {
             mPublisher = new Publisher(this, "publisher");
             mPublisher.startPreview();
+            setExposureCompensation();
             attachPublisherView(mPublisher);
             mPreviewButton.setText("Stop Preview");
             wasPreviewing = true;
